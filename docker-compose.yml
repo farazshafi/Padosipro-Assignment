@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: padosipro_db
+    restart: always
+    environment:
+      POSTGRES_USER: padosi_user
+      POSTGRES_PASSWORD: padosi_password
+      POSTGRES_DB: padosipro_db
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: padosipro_mailpit
+    restart: always
+    ports:
+      - '8025:8025' # Web UI
+      - '1025:1025' # SMTP server
+
+volumes:
+  postgres_data:
