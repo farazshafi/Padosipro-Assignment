@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "59fd88e8-6ce7-4453-b539-c8ff28ae3dac"
+      }
+    },
+    "android": {
+      "package": "com.farazshafi.padosipromonorepo"
+    }
+  }
+}

@@ -17,6 +17,8 @@ dist/
 build/
 .expo/
 web-build/
+android/
+ios/
 *.tsbuildinfo
 
 # Database & Volumes

@@ -11,6 +11,7 @@
     "backend:dev": "npm --prefix backend run dev",
     "backend:build": "npm --prefix backend run build",
     "mobile:start": "npm --prefix mobile run start",
+    "mobile:build:apk": "npm --prefix mobile run build:apk",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down"
   },
