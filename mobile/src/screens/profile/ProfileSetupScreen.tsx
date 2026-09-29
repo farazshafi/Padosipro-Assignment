@@ -8,7 +8,7 @@ import {
     Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Input, Button, ErrorMessage } from '../../components/common';
+import { Input, Button, ErrorMessage, BrandLogo } from '../../components/common';
 import { apiClient, ApiError } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { theme } from '../../theme';
@@ -117,6 +117,7 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ onComple
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.headerContainer}>
+                        <BrandLogo size="md" showText style={styles.logoMargin} />
                         <Text style={styles.title}>Complete Your Profile</Text>
                         <Text style={styles.subtitle}>
                             Please provide your contact details to personalize your PadosiPro experience.
@@ -206,17 +207,23 @@ const styles = StyleSheet.create({
     },
     headerContainer: {
         marginBottom: theme.spacing.xl,
+        alignItems: 'center',
+    },
+    logoMargin: {
+        marginBottom: theme.spacing.md,
     },
     title: {
         fontSize: theme.typography.fontSizes.xxl,
         fontWeight: theme.typography.fontWeights.bold,
         color: theme.colors.textPrimary,
         marginBottom: theme.spacing.xs,
+        textAlign: 'center',
     },
     subtitle: {
         fontSize: theme.typography.fontSizes.sm,
         color: theme.colors.textSecondary,
         lineHeight: theme.typography.lineHeights.sm,
+        textAlign: 'center',
     },
     errorCard: {
         marginBottom: theme.spacing.md,

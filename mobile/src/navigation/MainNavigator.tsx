@@ -41,7 +41,7 @@ export const MainNavigator: React.FC = () => {
                 tabBarActiveTintColor: theme.colors.primary,
                 tabBarInactiveTintColor: theme.colors.textMuted,
                 tabBarStyle: {
-                    backgroundColor: theme.colors.surface,
+                    backgroundColor: theme.colors.background,
                     borderTopColor: theme.colors.border,
                     paddingBottom: theme.spacing.xs,
                     paddingTop: theme.spacing.xs,
@@ -86,4 +86,3 @@ export const MainNavigator: React.FC = () => {
         </Tab.Navigator>
     );
 };
-

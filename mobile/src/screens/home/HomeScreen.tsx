@@ -17,7 +17,7 @@ import {
     EmptyState,
     Badge,
     Card,
-    Button,
+    BrandLogo,
 } from '../../components/common';
 import { theme } from '../../theme';
 
@@ -98,22 +98,25 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onManageTasks }) => {
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-            {/* Top Header */}
+            {/* Top Brand & Header Bar */}
             <View style={styles.header}>
-                <View style={styles.headerTextContainer}>
+                <View style={styles.headerTopRow}>
+                    <BrandLogo size="sm" showText />
+                    <TouchableOpacity
+                        style={styles.logoutButton}
+                        onPress={handleLogout}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={styles.logoutText}>Log Out</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.welcomeBanner}>
                     <Text style={styles.greeting}>
-                        Welcome back, {user?.fullName || user?.email?.split('@')[0] || 'Neighbor'}!
+                        Welcome back, {user?.fullName || user?.email?.split('@')[0] || 'Neighbor'}
                     </Text>
                     <Text style={styles.userEmail}>{user?.email}</Text>
                 </View>
-
-                <TouchableOpacity
-                    style={styles.logoutButton}
-                    onPress={handleLogout}
-                    activeOpacity={0.7}
-                >
-                    <Text style={styles.logoutText}>Log Out</Text>
-                </TouchableOpacity>
             </View>
 
             <ScrollView
@@ -136,10 +139,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onManageTasks }) => {
                 {/* Section Title & Manage Button */}
                 <View style={styles.sectionHeader}>
                     <View>
-                        <Text style={styles.sectionTitle}>Your Services & Tasks</Text>
+                        <Text style={styles.sectionTitle}>Your Active Services</Text>
                         <Text style={styles.sectionSubtitle}>
                             {selectedTasks.length}{' '}
-                            {selectedTasks.length === 1 ? 'task active' : 'tasks active'} in your neighborhood
+                            {selectedTasks.length === 1 ? 'task configured' : 'tasks configured'} in your account
                         </Text>
                     </View>
 
@@ -158,7 +161,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onManageTasks }) => {
                 {selectedTasks.length === 0 ? (
                     <EmptyState
                         title="No Services Selected"
-                        description="You haven't selected any household tasks or services yet. Select tasks to get started."
+                        description="You haven't selected any household tasks or services yet. Select tasks to customize your dashboard."
                         actionLabel={onManageTasks ? 'Browse & Select Tasks' : undefined}
                         onAction={onManageTasks}
                         style={styles.emptyStateCard}
@@ -169,7 +172,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onManageTasks }) => {
                             <Card key={task.id || task.task_id} style={styles.taskCard} elevation="sm">
                                 <View style={styles.taskCardHeader}>
                                     <Text style={styles.taskTitle}>{task.name}</Text>
-                                    <Badge label={task.category_name} variant="info" />
+                                    <Badge label={task.category_name} variant="success" />
                                 </View>
                                 <Text style={styles.taskDescription}>{task.description}</Text>
                             </Card>
@@ -189,36 +192,42 @@ const styles = StyleSheet.create({
     header: {
         backgroundColor: theme.colors.surface,
         paddingHorizontal: theme.spacing.lg,
-        paddingTop: theme.spacing.xl,
+        paddingTop: theme.spacing.md,
         paddingBottom: theme.spacing.md,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
         borderBottomWidth: 1,
         borderBottomColor: theme.colors.border,
         ...theme.shadows.sm,
     },
-    headerTextContainer: {
-        flex: 1,
-        marginRight: theme.spacing.sm,
+    headerTopRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: theme.spacing.md,
+    },
+    welcomeBanner: {
+        backgroundColor: theme.colors.surfaceVariant,
+        borderRadius: theme.radius.md,
+        padding: theme.spacing.md,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
     },
     greeting: {
-        fontSize: theme.typography.fontSizes.lg,
+        fontSize: theme.typography.fontSizes.md,
         fontWeight: theme.typography.fontWeights.bold,
         color: theme.colors.textPrimary,
     },
     userEmail: {
         fontSize: theme.typography.fontSizes.xs,
         color: theme.colors.textSecondary,
-        marginTop: theme.spacing.xxs,
+        marginTop: 2,
     },
     logoutButton: {
         paddingHorizontal: theme.spacing.md,
-        paddingVertical: theme.spacing.xs,
-        borderRadius: theme.radius.sm,
+        paddingVertical: 6,
+        borderRadius: theme.radius.full,
         backgroundColor: theme.colors.errorLight,
         borderWidth: 1,
-        borderColor: '#FCA5A5',
+        borderColor: 'rgba(239, 68, 68, 0.4)',
     },
     logoutText: {
         fontSize: theme.typography.fontSizes.xs,
@@ -250,16 +259,18 @@ const styles = StyleSheet.create({
     manageButton: {
         paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.xs,
-        borderRadius: theme.radius.sm,
+        borderRadius: theme.radius.full,
         backgroundColor: theme.colors.primaryLight,
+        borderWidth: 1,
+        borderColor: 'rgba(16, 185, 129, 0.4)',
     },
     manageText: {
         fontSize: theme.typography.fontSizes.xs,
         fontWeight: theme.typography.fontWeights.semibold,
-        color: theme.colors.primaryDark,
+        color: theme.colors.primary,
     },
     emptyStateCard: {
-        marginTop: theme.spacing.lg,
+        marginTop: theme.spacing.md,
         backgroundColor: theme.colors.surface,
         borderRadius: theme.radius.md,
         borderWidth: 1,
@@ -270,6 +281,8 @@ const styles = StyleSheet.create({
     },
     taskCard: {
         marginBottom: theme.spacing.xs,
+        backgroundColor: theme.colors.surface,
+        borderColor: theme.colors.border,
     },
     taskCardHeader: {
         flexDirection: 'row',

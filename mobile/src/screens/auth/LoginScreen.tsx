@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
-import { Input, Button, ErrorMessage } from '../../components/common';
+import { Input, Button, ErrorMessage, BrandLogo } from '../../components/common';
 import { apiClient, ApiError } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { theme } from '../../theme';
@@ -80,7 +80,6 @@ export const LoginScreen: React.FC<Props> = ({ route, navigation }) => {
 
             if (response.success && response.data?.token) {
                 const { token, user } = response.data;
-                // Save persistent session in AuthContext & AsyncStorage
                 await login(token, user);
             } else {
                 setApiError(response.message || 'Login failed. Please try again.');
@@ -110,9 +109,13 @@ export const LoginScreen: React.FC<Props> = ({ route, navigation }) => {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.headerContainer}>
-                    <Text style={styles.title}>PadosiPro</Text>
+                    <BrandLogo showTagline size="lg" style={styles.logoMargin} />
+                    <Text style={styles.title}>
+                        Stop Managing Your Home.{'\n'}
+                        <Text style={styles.titleAccent}>Start Living In It.</Text>
+                    </Text>
                     <Text style={styles.subtitle}>
-                        Sign in to manage your household requests & tasks
+                        Sign in to manage your household requests & concierge tasks
                     </Text>
                 </View>
 
@@ -207,17 +210,28 @@ const styles = StyleSheet.create({
     },
     headerContainer: {
         marginBottom: theme.spacing.xl,
+        alignItems: 'center',
+    },
+    logoMargin: {
+        marginBottom: theme.spacing.lg,
     },
     title: {
-        fontSize: 32,
+        fontSize: theme.typography.fontSizes.xl,
         fontWeight: theme.typography.fontWeights.bold,
-        color: theme.colors.primary,
+        color: theme.colors.textPrimary,
+        textAlign: 'center',
         marginBottom: theme.spacing.xs,
+        lineHeight: 30,
+    },
+    titleAccent: {
+        color: theme.colors.primary,
     },
     subtitle: {
-        fontSize: theme.typography.fontSizes.sm,
+        fontSize: theme.typography.fontSizes.xs,
         color: theme.colors.textSecondary,
+        textAlign: 'center',
         lineHeight: theme.typography.lineHeights.sm,
+        paddingHorizontal: theme.spacing.sm,
     },
     successBanner: {
         backgroundColor: theme.colors.successLight,
@@ -231,6 +245,7 @@ const styles = StyleSheet.create({
         color: theme.colors.success,
         fontSize: theme.typography.fontSizes.sm,
         fontWeight: theme.typography.fontWeights.medium,
+        textAlign: 'center',
     },
     errorCard: {
         marginBottom: theme.spacing.md,
@@ -244,9 +259,10 @@ const styles = StyleSheet.create({
         marginBottom: theme.spacing.md,
     },
     unverifiedText: {
-        color: theme.colors.textPrimary,
+        color: theme.colors.warning,
         fontSize: theme.typography.fontSizes.xs,
         fontWeight: theme.typography.fontWeights.semibold,
+        textAlign: 'center',
     },
     form: {
         marginBottom: theme.spacing.lg,

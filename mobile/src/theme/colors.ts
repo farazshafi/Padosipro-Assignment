@@ -1,35 +1,40 @@
 export const colors = {
-    primary: '#16A34A',
-    primaryDark: '#15803D',
-    primaryLight: '#DCFCE7',
+    // Primary Vibrant Emerald / Neon Green (Matching PadosiPro Reference UI)
+    primary: '#10B981',
+    primaryDark: '#059669',
+    primaryLight: 'rgba(16, 185, 129, 0.15)',
 
-    secondary: '#2563EB',
-    secondaryDark: '#1D4ED8',
-    secondaryLight: '#DBEAFE',
+    secondary: '#34D399',
+    secondaryDark: '#10B981',
+    secondaryLight: 'rgba(52, 211, 153, 0.15)',
 
-    background: '#F8FAFC',
-    surface: '#FFFFFF',
-    surfaceVariant: '#F1F5F9',
+    // Dark Obsidian Theme Colors
+    background: '#0A0D0C',
+    surface: '#131816',
+    surfaceVariant: '#1A221E',
 
-    textPrimary: '#0F172A',
-    textSecondary: '#475569',
-    textMuted: '#94A3B8',
-    textInverse: '#FFFFFF',
+    // Text Hierarchy for Dark Background
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    textInverse: '#0A0D0C',
 
-    border: '#E2E8F0',
-    borderFocused: '#16A34A',
+    // Glowing Dark Borders
+    border: '#24302A',
+    borderFocused: '#10B981',
 
+    // Alert & Status Colors
     error: '#EF4444',
-    errorLight: '#FEE2E2',
+    errorLight: 'rgba(239, 68, 68, 0.18)',
 
     warning: '#F59E0B',
-    warningLight: '#FEF3C7',
+    warningLight: 'rgba(245, 158, 11, 0.18)',
 
     success: '#10B981',
-    successLight: '#D1FAE5',
+    successLight: 'rgba(16, 185, 129, 0.18)',
 
     info: '#3B82F6',
-    infoLight: '#EFF6FF',
+    infoLight: 'rgba(59, 130, 246, 0.18)',
 
     transparent: 'transparent',
 } as const;

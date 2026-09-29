@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
-import { Input, Button, ErrorMessage } from '../../components/common';
+import { Input, Button, ErrorMessage, BrandLogo } from '../../components/common';
 import { apiClient, ApiError } from '../../services/api';
 import { theme } from '../../theme';
 
@@ -134,6 +134,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.headerContainer}>
+                    <BrandLogo showText size="md" style={styles.logoMargin} />
                     <Text style={styles.title}>Create Account</Text>
                     <Text style={styles.subtitle}>
                         Join PadosiPro to get started with neighborhood lifestyle management
@@ -242,17 +243,23 @@ const styles = StyleSheet.create({
     },
     headerContainer: {
         marginBottom: theme.spacing.lg,
+        alignItems: 'center',
+    },
+    logoMargin: {
+        marginBottom: theme.spacing.md,
     },
     title: {
         fontSize: theme.typography.fontSizes.xxl,
         fontWeight: theme.typography.fontWeights.bold,
         color: theme.colors.textPrimary,
         marginBottom: theme.spacing.xs,
+        textAlign: 'center',
     },
     subtitle: {
         fontSize: theme.typography.fontSizes.sm,
         color: theme.colors.textSecondary,
         lineHeight: theme.typography.lineHeights.sm,
+        textAlign: 'center',
     },
     errorCard: {
         marginBottom: theme.spacing.md,
