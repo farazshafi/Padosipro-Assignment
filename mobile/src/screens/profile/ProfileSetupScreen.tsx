@@ -33,8 +33,12 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ onComple
         const newErrors: { [key: string]: string | undefined } = {};
         let valid = true;
 
-        if (!name.trim()) {
-            newErrors.name = 'Full name is required';
+        const cleanName = name.trim();
+        const nameLetters = (cleanName.match(/[a-zA-Z]/g) || []).length;
+        const nameRegex = /^[a-zA-Z\s'.]{2,50}$/;
+
+        if (!cleanName || !nameRegex.test(cleanName) || nameLetters < 2) {
+            newErrors.name = 'Please enter a valid full name (at least 2 letters, e.g. Rahul Sharma)';
             valid = false;
         }
 

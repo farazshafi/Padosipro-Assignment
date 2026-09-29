@@ -11,5 +11,6 @@ router.use(authenticateJwt);
 
 router.get('/', profileController.getProfile);
 router.post('/', validateRequest({ body: validateProfileInput }), profileController.saveProfile);
+router.put('/', validateRequest({ body: validateProfileInput }), profileController.saveProfile);
 
 export default router;

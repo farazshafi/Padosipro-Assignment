@@ -11,8 +11,9 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
-import { Button, ErrorMessage, LoadingSpinner } from '../../components/common';
+import { Button, ErrorMessage, LoadingSpinner, BrandLogo } from '../../components/common';
 import { apiClient, ApiError } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { theme } from '../../theme';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'OTPVerification'>;
@@ -22,6 +23,7 @@ const RESEND_COOLDOWN_SECONDS = 30;
 
 export const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
     const { email } = route.params || { email: '' };
+    const { login } = useAuth();
 
     const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
     const [loading, setLoading] = useState(false);
@@ -97,14 +99,28 @@ export const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) =>
                 code: otpCode,
             }, { requiresAuth: false });
 
-            if (response.success) {
-                setSuccessMessage('Email verified successfully! Redirecting to login...');
-                setTimeout(() => {
-                    navigation.navigate('Login', {
-                        message: 'Email verified successfully! Please sign in.',
-                        email,
-                    });
-                }, 1200);
+            if (response.success && response.data) {
+                setSuccessMessage('Email verified successfully! Logging you in...');
+
+                const authData = response.data;
+                if (authData.token && authData.user) {
+                    setTimeout(async () => {
+                        await login(authData.token, {
+                            id: authData.user.id,
+                            email: authData.user.email,
+                            fullName: '',
+                            isVerified: true,
+                            isProfileComplete: false,
+                        });
+                    }, 500);
+                } else {
+                    setTimeout(() => {
+                        navigation.navigate('Login', {
+                            message: 'Email verified successfully! Please sign in.',
+                            email,
+                        });
+                    }, 1000);
+                }
             } else {
                 setApiError(response.message || 'OTP verification failed. Please try again.');
             }
@@ -161,6 +177,7 @@ export const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) =>
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.headerContainer}>
+                    <BrandLogo size="md" showText style={styles.logoMargin} />
                     <Text style={styles.title}>Verify Email</Text>
                     <Text style={styles.subtitle}>
                         Enter the 6-digit verification code sent to{' '}
@@ -257,37 +274,44 @@ const styles = StyleSheet.create({
     },
     headerContainer: {
         marginBottom: theme.spacing.xl,
+        alignItems: 'center',
+    },
+    logoMargin: {
+        marginBottom: theme.spacing.md,
     },
     title: {
         fontSize: theme.typography.fontSizes.xxl,
         fontWeight: theme.typography.fontWeights.bold,
         color: theme.colors.textPrimary,
         marginBottom: theme.spacing.xs,
+        textAlign: 'center',
     },
     subtitle: {
         fontSize: theme.typography.fontSizes.sm,
         color: theme.colors.textSecondary,
         lineHeight: theme.typography.lineHeights.sm,
+        textAlign: 'center',
     },
     emailHighlight: {
         fontWeight: theme.typography.fontWeights.semibold,
-        color: theme.colors.textPrimary,
+        color: theme.colors.primary,
     },
     alertCard: {
         marginBottom: theme.spacing.md,
     },
     successCard: {
-        backgroundColor: theme.colors.successLight,
-        borderColor: theme.colors.success,
+        backgroundColor: theme.colors.surface,
+        borderColor: theme.colors.primary,
         borderWidth: 1,
         borderRadius: theme.radius.md,
         padding: theme.spacing.md,
         marginBottom: theme.spacing.md,
     },
     successText: {
-        color: theme.colors.success,
+        color: theme.colors.primary,
         fontSize: theme.typography.fontSizes.sm,
         fontWeight: theme.typography.fontWeights.medium,
+        textAlign: 'center',
     },
     otpRow: {
         flexDirection: 'row',

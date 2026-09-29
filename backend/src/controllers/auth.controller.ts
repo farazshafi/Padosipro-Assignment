@@ -23,12 +23,12 @@ export class AuthController {
     public verifyOTP = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { email, code } = req.body;
-            await otpService.verifyOTP(email, code);
+            const result = await authService.verifyOTPAndLogin(email, code);
 
             return sendSuccess(
                 res,
-                { email, is_verified: true },
-                'Email verified successfully. You can now log in.'
+                result,
+                'Email verified successfully.'
             );
         } catch (error) {
             next(error);

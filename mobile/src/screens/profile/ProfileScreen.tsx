@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { apiClient, ApiError } from '../../services/api';
-import { LoadingSpinner, ErrorMessage, Button, Input } from '../../components/common';
+import { LoadingSpinner, ErrorMessage, Button, Input, BrandLogo } from '../../components/common';
 import { theme } from '../../theme';
 
 interface ProfileData {
@@ -71,15 +71,24 @@ export const ProfileScreen: React.FC = () => {
     };
 
     const handleSaveProfile = async () => {
-        if (!name.trim() || !mobileNumber.trim() || !address.trim()) {
-            Alert.alert('Required Fields', 'Please fill in Name, Mobile Number, and Address.');
+        const cleanName = name.trim();
+        const nameLetters = (cleanName.match(/[a-zA-Z]/g) || []).length;
+        const nameRegex = /^[a-zA-Z\s'.]{2,50}$/;
+
+        if (!cleanName || !nameRegex.test(cleanName) || nameLetters < 2) {
+            Alert.alert('Invalid Name', 'Full name must contain at least 2 letters (e.g. Rahul Sharma).');
+            return;
+        }
+
+        if (!mobileNumber.trim() || !address.trim()) {
+            Alert.alert('Required Fields', 'Please fill in Mobile Number and Address.');
             return;
         }
 
         setSaving(true);
         try {
             const res = await apiClient.put('/profile', {
-                name: name.trim(),
+                name: cleanName,
                 mobile_number: mobileNumber.trim(),
                 address: address.trim(),
                 business_name: businessName.trim() || undefined,
@@ -87,7 +96,7 @@ export const ProfileScreen: React.FC = () => {
 
             if (res.success) {
                 const updated = res.data?.profile || res.data;
-                setProfile(updated || { name, mobile_number: mobileNumber, address, business_name: businessName });
+                setProfile(updated || { name: cleanName, mobile_number: mobileNumber, address, business_name: businessName });
                 setIsEditing(false);
                 Alert.alert('Success', 'Profile updated successfully!');
             }
@@ -133,6 +142,11 @@ export const ProfileScreen: React.FC = () => {
                     <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
                 }
             >
+                {/* Top Brand Header */}
+                <View style={styles.headerBar}>
+                    <BrandLogo size="sm" showText />
+                </View>
+
                 {/* Header Avatar Card */}
                 <View style={styles.headerCard}>
                     <View style={styles.avatarCircle}>
@@ -261,6 +275,11 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
+    },
+    headerBar: {
+        alignItems: 'center',
+        paddingVertical: theme.spacing.sm,
+        marginBottom: theme.spacing.xs,
     },
     scrollContent: {
         padding: theme.spacing.lg,

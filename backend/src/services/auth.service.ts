@@ -57,6 +57,33 @@ export class AuthService {
     }
 
     /**
+     * Verifies OTP code and returns direct login token and user object
+     */
+    public async verifyOTPAndLogin(email: string, code: string): Promise<LoginResponse> {
+        const normalizedEmail = email.trim().toLowerCase();
+        await otpService.verifyOTP(normalizedEmail, code);
+
+        const userRes = await query('SELECT * FROM users WHERE email = $1', [normalizedEmail]);
+        const user = userRes.rows[0];
+
+        const token = jwt.sign(
+            { userId: user.id, email: user.email, isVerified: user.is_verified },
+            env.JWT_SECRET as string,
+            { expiresIn: env.JWT_EXPIRES_IN as any }
+        );
+
+        return {
+            token,
+            user: {
+                id: user.id,
+                email: user.email,
+                is_verified: user.is_verified,
+                created_at: user.created_at,
+            },
+        };
+    }
+
+    /**
      * Logs in a verified user and returns a signed JWT token
      */
     public async login(email: string, password: string): Promise<LoginResponse> {

@@ -5,6 +5,14 @@ export const validateProfileInput = (body: any) => {
     // Name validation
     if (!name || typeof name !== 'string' || !name.trim()) {
         errors.push('Full name is required');
+    } else {
+        const cleanName = name.trim();
+        // Require at least 2 characters, valid name characters, and at least 2 letters
+        const nameRegex = /^[a-zA-Z\s'.]{2,50}$/;
+        const hasLetters = (cleanName.match(/[a-zA-Z]/g) || []).length >= 2;
+        if (!nameRegex.test(cleanName) || !hasLetters) {
+            errors.push('Full name must contain at least 2 letters and only valid characters (e.g. Rahul Sharma)');
+        }
     }
 
     // Indian Mobile Number validation (+91 followed by 10 digits starting with 6-9)

@@ -48,8 +48,11 @@ export class OTPService {
             throw new BadRequestError('Email is already verified. Please log in.');
         }
 
-        // 2. Fetch OTP record
-        const otpRes = await query('SELECT * FROM email_otps WHERE user_id = $1', [user.id]);
+        // 2. Fetch OTP record with SQL expiration check
+        const otpRes = await query(
+            'SELECT *, (expires_at < CURRENT_TIMESTAMP) AS is_expired FROM email_otps WHERE user_id = $1',
+            [user.id]
+        );
         if (otpRes.rows.length === 0) {
             throw new BadRequestError('No active OTP found. Please request a new code.');
         }
@@ -58,11 +61,13 @@ export class OTPService {
 
         // 3. Check attempt count (max 5)
         if (hasExceededAttempts(otpRecord.attempts, env.OTP_MAX_ATTEMPTS)) {
+            await query('DELETE FROM email_otps WHERE id = $1', [otpRecord.id]);
             throw new BadRequestError('Maximum verification attempts exceeded. Please request a new OTP.');
         }
 
-        // 4. Check expiry (10 mins)
-        if (isOTPExpired(otpRecord.expires_at)) {
+        // 4. Check expiration (both SQL DB timestamp and JS Date check)
+        if (otpRecord.is_expired || isOTPExpired(otpRecord.expires_at)) {
+            await query('DELETE FROM email_otps WHERE id = $1', [otpRecord.id]);
             throw new BadRequestError('OTP code has expired. Please request a new one.');
         }
 
@@ -75,6 +80,7 @@ export class OTPService {
 
             const remainingAttempts = env.OTP_MAX_ATTEMPTS - newAttempts;
             if (remainingAttempts <= 0) {
+                await query('DELETE FROM email_otps WHERE id = $1', [otpRecord.id]);
                 throw new BadRequestError('Invalid OTP code. Maximum verification attempts exceeded.');
             }
             throw new BadRequestError(`Invalid OTP code. ${remainingAttempts} attempts remaining.`);
