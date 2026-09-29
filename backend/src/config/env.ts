@@ -17,7 +17,7 @@ export const env = {
     JWT_SECRET: process.env.JWT_SECRET || 'super_secret_jwt_key_change_in_production',
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
 
-    OTP_EXPIRY_MINUTES: parseInt(process.env.OTP_EXPIRY_MINUTES || '10', 10),
+    OTP_EXPIRY_MINUTES: parseInt(process.env.OTP_EXPIRY_MINUTES || '2', 10),
     OTP_MAX_ATTEMPTS: parseInt(process.env.OTP_MAX_ATTEMPTS || '5', 10),
     OTP_RESEND_COOLDOWN_SECONDS: parseInt(process.env.OTP_RESEND_COOLDOWN_SECONDS || '30', 10),
 };

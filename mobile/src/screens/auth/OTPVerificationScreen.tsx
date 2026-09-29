@@ -20,34 +20,64 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'OTPVerification'>;
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 30;
+const EXPIRY_SECONDS = 120; // 2 minutes strict OTP expiration
 
 export const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
     const { email } = route.params || { email: '' };
     const { login } = useAuth();
 
     const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
+    const [focusedIndex, setFocusedIndex] = useState<number | null>(0);
     const [loading, setLoading] = useState(false);
     const [resending, setResending] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
     const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
+    const [expiryTimeLeft, setExpiryTimeLeft] = useState(EXPIRY_SECONDS);
 
     const inputRefs = useRef<Array<TextInput | null>>([]);
 
-    // Countdown timer effect
+    // 1. Resend Cooldown Timer
     useEffect(() => {
         if (cooldown <= 0) return;
-
         const timer = setInterval(() => {
-            setCooldown((prev) => prev - 1);
+            setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
         }, 1000);
-
         return () => clearInterval(timer);
     }, [cooldown]);
+
+    // 2. OTP Expiration Countdown Timer
+    useEffect(() => {
+        if (expiryTimeLeft <= 0) return;
+        const timer = setInterval(() => {
+            setExpiryTimeLeft((prev) => {
+                if (prev <= 1) {
+                    setApiError('OTP code has expired. Please request a new verification code.');
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [expiryTimeLeft]);
+
+    const formatTime = (totalSeconds: number): string => {
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const isExpired = expiryTimeLeft <= 0;
 
     const handleDigitChange = (text: string, index: number) => {
         setApiError(null);
         setSuccessMessage(null);
+
+        if (isExpired) {
+            setApiError('OTP code has expired. Please request a new verification code.');
+            return;
+        }
 
         // Handle paste of full 6-digit code
         if (text.length > 1) {
@@ -57,9 +87,8 @@ export const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) =>
                 newDigits[i] = char;
             });
             setOtpDigits(newDigits);
-            if (cleaned.length === OTP_LENGTH) {
-                inputRefs.current[OTP_LENGTH - 1]?.focus();
-            }
+            const focusTarget = Math.min(cleaned.length, OTP_LENGTH - 1);
+            inputRefs.current[focusTarget]?.focus();
             return;
         }
 
@@ -75,8 +104,13 @@ export const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) =>
     };
 
     const handleKeyPress = (e: any, index: number) => {
-        if (e.nativeEvent.key === 'Backspace' && !otpDigits[index] && index > 0) {
-            inputRefs.current[index - 1]?.focus();
+        if (e.nativeEvent.key === 'Backspace') {
+            if (!otpDigits[index] && index > 0) {
+                const newDigits = [...otpDigits];
+                newDigits[index - 1] = '';
+                setOtpDigits(newDigits);
+                inputRefs.current[index - 1]?.focus();
+            }
         }
     };
 
@@ -84,6 +118,11 @@ export const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) =>
     const isCodeComplete = otpCode.length === OTP_LENGTH;
 
     const handleVerify = async () => {
+        if (isExpired) {
+            setApiError('OTP code has expired. Please request a new verification code.');
+            return;
+        }
+
         if (!isCodeComplete) {
             setApiError('Please enter all 6 digits of the OTP code');
             return;
@@ -150,6 +189,7 @@ export const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) =>
             if (response.success) {
                 setSuccessMessage('A new 6-digit OTP code has been sent to your email.');
                 setCooldown(RESEND_COOLDOWN_SECONDS);
+                setExpiryTimeLeft(EXPIRY_SECONDS);
                 setOtpDigits(Array(OTP_LENGTH).fill(''));
                 inputRefs.current[0]?.focus();
             } else {
@@ -185,9 +225,19 @@ export const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) =>
                     </Text>
                 </View>
 
+                {/* Expiration Timer Banner */}
+                <View style={[styles.timerBanner, isExpired ? styles.timerBannerExpired : null]}>
+                    <Text style={styles.timerLabel}>
+                        {isExpired ? 'OTP Expired' : 'Code Expires In:'}
+                    </Text>
+                    <Text style={[styles.timerValue, isExpired ? styles.timerValueExpired : null]}>
+                        {formatTime(expiryTimeLeft)}
+                    </Text>
+                </View>
+
                 {apiError ? (
                     <ErrorMessage
-                        title="Verification Failed"
+                        title="Verification Error"
                         message={apiError}
                         variant="card"
                         style={styles.alertCard}
@@ -201,30 +251,37 @@ export const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) =>
                 ) : null}
 
                 <View style={styles.otpRow}>
-                    {otpDigits.map((digit, index) => (
-                        <TextInput
-                            key={index}
-                            ref={(ref) => (inputRefs.current[index] = ref)}
-                            style={[
-                                styles.otpBox,
-                                digit ? styles.otpBoxFilled : null,
-                                inputRefs.current[index]?.isFocused() ? styles.otpBoxFocused : null,
-                            ]}
-                            value={digit}
-                            onChangeText={(text) => handleDigitChange(text, index)}
-                            onKeyPress={(e) => handleKeyPress(e, index)}
-                            keyboardType="number-pad"
-                            maxLength={6}
-                            selectTextOnFocus
-                        />
-                    ))}
+                    {otpDigits.map((digit, index) => {
+                        const isFocused = focusedIndex === index;
+                        return (
+                            <TextInput
+                                key={index}
+                                ref={(ref) => (inputRefs.current[index] = ref)}
+                                style={[
+                                    styles.otpBox,
+                                    digit ? styles.otpBoxFilled : null,
+                                    isFocused ? styles.otpBoxFocused : null,
+                                    isExpired ? styles.otpBoxDisabled : null,
+                                ]}
+                                value={digit}
+                                onChangeText={(text) => handleDigitChange(text, index)}
+                                onKeyPress={(e) => handleKeyPress(e, index)}
+                                onFocus={() => setFocusedIndex(index)}
+                                onBlur={() => setFocusedIndex(null)}
+                                keyboardType="number-pad"
+                                maxLength={index === 0 ? 6 : 1}
+                                selectTextOnFocus
+                                editable={!isExpired && !loading}
+                            />
+                        );
+                    })}
                 </View>
 
                 <Button
-                    title="Verify OTP Code"
+                    title={isExpired ? 'OTP Expired' : 'Verify OTP Code'}
                     onPress={handleVerify}
                     loading={loading}
-                    disabled={!isCodeComplete || loading}
+                    disabled={!isCodeComplete || loading || isExpired}
                     style={styles.verifyButton}
                 />
 
@@ -244,7 +301,7 @@ export const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) =>
                                     cooldown > 0 && styles.resendDisabled,
                                 ]}
                             >
-                                {cooldown > 0 ? `Resend OTP in ${cooldown}s` : 'Resend OTP'}
+                                {cooldown > 0 ? `Resend OTP in ${cooldown}s` : 'Resend OTP Now'}
                             </Text>
                         </TouchableOpacity>
                     )}
@@ -273,7 +330,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     headerContainer: {
-        marginBottom: theme.spacing.xl,
+        marginBottom: theme.spacing.md,
         alignItems: 'center',
     },
     logoMargin: {
@@ -295,6 +352,37 @@ const styles = StyleSheet.create({
     emailHighlight: {
         fontWeight: theme.typography.fontWeights.semibold,
         color: theme.colors.primary,
+    },
+    timerBanner: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: theme.colors.surface,
+        borderColor: theme.colors.border,
+        borderWidth: 1,
+        borderRadius: theme.radius.md,
+        paddingVertical: theme.spacing.xs,
+        paddingHorizontal: theme.spacing.md,
+        alignSelf: 'center',
+        marginBottom: theme.spacing.md,
+        gap: theme.spacing.xs,
+    },
+    timerBannerExpired: {
+        borderColor: theme.colors.error,
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    },
+    timerLabel: {
+        fontSize: theme.typography.fontSizes.xs,
+        color: theme.colors.textSecondary,
+        fontWeight: theme.typography.fontWeights.medium,
+    },
+    timerValue: {
+        fontSize: theme.typography.fontSizes.sm,
+        color: theme.colors.primary,
+        fontWeight: theme.typography.fontWeights.bold,
+    },
+    timerValueExpired: {
+        color: theme.colors.error,
     },
     alertCard: {
         marginBottom: theme.spacing.md,
@@ -338,9 +426,13 @@ const styles = StyleSheet.create({
         borderColor: theme.colors.primary,
         shadowColor: theme.colors.primary,
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.2,
         shadowRadius: 4,
-        elevation: 2,
+        elevation: 3,
+    },
+    otpBoxDisabled: {
+        opacity: 0.5,
+        borderColor: theme.colors.border,
     },
     verifyButton: {
         marginBottom: theme.spacing.lg,

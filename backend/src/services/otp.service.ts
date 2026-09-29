@@ -8,7 +8,7 @@ export class OTPService {
     /**
      * Generates, hashes, stores, and emails a new OTP for a user
      */
-    public async createAndSendOTP(userId: string, email: string): Promise<{ resendAvailableAt: Date }> {
+    public async createAndSendOTP(userId: string, email: string): Promise<{ resendAvailableAt: Date; expiresAt: Date }> {
         const rawOTP = generateOTP();
         const otpHash = hashOTP(rawOTP);
 
@@ -21,14 +21,14 @@ export class OTPService {
         const insertQuery = `
       INSERT INTO email_otps (user_id, otp_hash, attempts, expires_at, resend_available_at)
       VALUES ($1, $2, 0, $3, $4)
-      RETURNING resend_available_at
+      RETURNING resend_available_at, expires_at
     `;
         await query(insertQuery, [userId, otpHash, expiresAt, resendAvailableAt]);
 
         // Send email asynchronously via Mailpit
         await mailerService.sendOTPEmail(email, rawOTP);
 
-        return { resendAvailableAt };
+        return { resendAvailableAt, expiresAt };
     }
 
     /**
@@ -96,7 +96,7 @@ export class OTPService {
     /**
      * Resends a fresh OTP enforcing 30-second cooldown
      */
-    public async resendOTP(email: string): Promise<{ resendAvailableAt: Date }> {
+    public async resendOTP(email: string): Promise<{ resendAvailableAt: Date; expiresAt: Date }> {
         const normalizedEmail = email.trim().toLowerCase();
 
         const userRes = await query('SELECT id, is_verified FROM users WHERE email = $1', [normalizedEmail]);
